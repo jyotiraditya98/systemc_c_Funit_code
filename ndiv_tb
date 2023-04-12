@@ -1,0 +1,51 @@
+#include "systemc.h"
+#include "ndiv.cpp"
+
+SC_MODULE(testbench) {
+    sc_out<sc_uint<8>> numerator;
+    sc_out<sc_uint<8>> denominator;
+    sc_in<sc_uint<8>> quotient;
+    sc_in<sc_uint<8>> remainder;
+
+    void test() {
+        for (int i = 0; i <= 10; i++) {
+            for (int j = 1; j <= 10; j++) {
+                numerator.write(i);
+                denominator.write(j);
+                wait(10, SC_NS);
+                cout << "Dividing " << i << " by " << j << endl;
+                cout << "Quotient: " << quotient.read() << endl;
+                cout << "Remainder: " << remainder.read() << endl;
+            }
+        }
+        sc_stop();
+    }
+
+    SC_CTOR(testbench) {
+        SC_THREAD(test);
+        sensitive << quotient << remainder;
+    }
+};
+
+int sc_main(int argc, char* argv[]) {
+    divider div("div");
+    testbench tb("tb");
+
+    sc_signal<sc_uint<8>> numerator_sig;
+    sc_signal<sc_uint<8>> denominator_sig;
+    sc_signal<sc_uint<8>> quotient_sig;
+    sc_signal<sc_uint<8>> remainder_sig;
+
+    div.numerator(numerator_sig);
+    div.denominator(denominator_sig);
+    div.quotient(quotient_sig);
+    div.remainder(remainder_sig);
+
+    tb.numerator(numerator_sig);
+    tb.denominator(denominator_sig);
+    tb.quotient(quotient_sig);
+    tb.remainder(remainder_sig);
+
+    sc_start();
+    return 0;
+}
